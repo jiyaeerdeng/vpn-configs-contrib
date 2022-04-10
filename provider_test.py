@@ -15,9 +15,7 @@ with open(auth_file_path, "w") as auth_file:
     auth_file.writelines(["username\n", "password\n"])
 print(f"Crated dummy auth file at {auth_file_path}")
 
-results = {}
-results["providers"] = {}
-
+results = {"providers": {}}
 count = 0
 for config_path in Path(base_dir).rglob("*.ovpn"):
     provider = config_path.relative_to(base_dir).parts[0]
@@ -57,27 +55,27 @@ for config_path in Path(base_dir).rglob("*.ovpn"):
         resolve_error = None
         retry_max = None
     else:
-        server_responded = True if "Peer Connection Initiated" in process.stdout else False
-        auth_failed = True if "AUTH_FAILED" in process.stdout else False
-        resolve_error = (
-            True if "RESOLVE: Cannot resolve host address" in process.stdout else False
-        )
+        server_responded = "Peer Connection Initiated" in process.stdout
+        auth_failed = "AUTH_FAILED" in process.stdout
+        resolve_error = "RESOLVE: Cannot resolve host address" in process.stdout
 
         retry_max_regex = re.compile(
             "All connections have been connect-retry-max .* times unsuccessful, exiting"
         )
-        retry_max = True if retry_max_regex.search(process.stdout) else False
+        retry_max = bool(retry_max_regex.search(process.stdout))
 
         print(process.stdout)
 
     stop = time.perf_counter()
 
-    results["providers"][provider][str(config)] = {}
-    results["providers"][provider][str(config)]["responded"] = server_responded
-    results["providers"][provider][str(config)]["auth_failed"] = auth_failed
-    results["providers"][provider][str(config)]["retry_max"] = retry_max
-    results["providers"][provider][str(config)]["resolve_error"] = resolve_error
-    results["providers"][provider][str(config)]["duration"] = round(stop - start, 2)
+    results["providers"][provider][str(config)] = {
+        "responded": server_responded,
+        "auth_failed": auth_failed,
+        "retry_max": retry_max,
+        "resolve_error": resolve_error,
+        "duration": round(stop - start, 2),
+    }
+
     count = count + 1
 
 # Collect results
@@ -93,9 +91,11 @@ for provider in results["providers"]:
         if results["providers"][provider][config]["responded"]:
             sucessful_connects = sucessful_connects + 1
     total_configs = len(results["providers"][provider].keys())
-    results["summary"][provider] = {}
-    results["summary"][provider]["total"] = total_configs
-    results["summary"][provider]["success"] = sucessful_connects
+    results["summary"][provider] = {
+        "total": total_configs,
+        "success": sucessful_connects,
+    }
+
     results["summary"][provider]["duration"] = provider_duration
     results["summary"][provider]["rate"] = round(sucessful_connects / total_configs, 2)
 

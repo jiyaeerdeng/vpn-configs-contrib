@@ -11,13 +11,11 @@ with open(args.result_file) as result_file:
 
 providers = list(results["summary"].keys())
 
-markdown_table = []
-markdown_table.append(
-    "| Provider Folder | Provider Status | Configs tested | Successful |"
-)
-markdown_table.append(
-    "| :-------------- | :-------------: | :------------: | :--------: |"
-)
+markdown_table = [
+    "| Provider Folder | Provider Status | Configs tested | Successful |",
+    "| :-------------- | :-------------: | :------------: | :--------: |",
+]
+
 for provider in providers:
     configs_tested = results["summary"][provider]["total"]
     configs_success = results["summary"][provider]["success"]
@@ -25,7 +23,7 @@ for provider in providers:
     success_rate_percent = round(success_rate * 100)
 
     if success_rate_percent == 100:
-        emoji = f":100:"
+        emoji = ":100:"
     elif success_rate_percent >= 90:
         emoji = f":white_check_mark: ({success_rate_percent}%)"
     elif success_rate_percent >= 70:
